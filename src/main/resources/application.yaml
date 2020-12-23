@@ -1,0 +1,29 @@
+server.port: 8090
+
+spring:
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            issuer-uri: https://keycloak.yadadev.com/auth/realms/my-test
+            user-name-attribute: preferred_username
+        registration:
+          keycloak:
+            client-id: gw-test
+            client-secret: 39968d20-d0e5-42fb-99b0-f22d13461fe2
+  cloud:
+    gateway:
+      routes:
+        - id: test-web
+          uri: http://pm.lanxinpay.com
+          predicates:
+            - Path=/
+          filters:
+            - OAuth
+        - id: test-api
+          uri: http://pm.lanxinpay.com
+          predicates:
+            - Path=/api
+          filters:
+            - OAuthApi
