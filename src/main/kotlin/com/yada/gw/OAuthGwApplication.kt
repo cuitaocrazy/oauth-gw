@@ -9,4 +9,3 @@ class OAuthGwApplication
 fun main(args: Array<String>) {
 	runApplication<OAuthGwApplication>(*args)
 }
-
