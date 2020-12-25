@@ -56,7 +56,7 @@ class OAuthApiGatewayFilterFactory(private val clientManagerProvider: ObjectProv
                 headers.setBearerAuth(
                     accessToken.tokenValue
                 )
-                headers.set("COOKIE", null)
+                headers.set("COOKIE", "")
             }
         }.build()
     }

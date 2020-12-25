@@ -20,9 +20,9 @@ spring:
         - id: test-web
           uri: http://pm.lanxinpay.com
           predicates:
-            - Path=/app
+            - Path=/app,/app/**
           filters:
-            - OAuth
+            - OAuth=/app
         - id: test-api
           uri: http://pm.lanxinpay.com
           predicates:
