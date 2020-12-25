@@ -13,6 +13,7 @@ import org.springframework.security.web.server.util.matcher.ServerWebExchangeMat
 class SecurityConfig {
     @Bean
     fun springSecurityFilterChain(http: ServerHttpSecurity, handler: OAuthLogoutSuccessHandler): SecurityWebFilterChain {
+        http.authorizeExchange().pathMatchers(HttpMethod.GET, "/logout-oidc").authenticated()
         // 认证和授权不由这里发起，将交给下游gateway的filter
         http.authorizeExchange().anyExchange().permitAll()
         http.logout().requiresLogout(ServerWebExchangeMatchers.pathMatchers(HttpMethod.GET, "/logout-oidc"))

@@ -6,10 +6,12 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository
 import org.springframework.security.web.server.DefaultServerRedirectStrategy
 import org.springframework.security.web.server.WebFilterExchange
+import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler
 import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler
 import org.springframework.stereotype.Component
 import org.springframework.web.util.UriComponentsBuilder
 import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.switchIfEmpty
 import java.net.URI
 import java.nio.charset.StandardCharsets
 
@@ -18,8 +20,11 @@ class OAuthLogoutSuccessHandler(
     private val clientRegistrationRepository: ReactiveClientRegistrationRepository
 ) : ServerLogoutSuccessHandler {
     private val redirectStrategy = DefaultServerRedirectStrategy()
+    private val serverLogoutSuccessHandler = RedirectServerLogoutSuccessHandler()
     override fun onLogoutSuccess(exchange: WebFilterExchange, authentication: Authentication): Mono<Void> {
-        return Mono.just(authentication).map(OAuth2AuthenticationToken::class.java::cast)
+        return Mono.just(authentication)
+            .filter(OAuth2AuthenticationToken::class.java::isInstance)
+            .map(OAuth2AuthenticationToken::class.java::cast)
             .flatMap { oauth2Authentication ->
                 val clientRegistrationId = oauth2Authentication.authorizedClientRegistrationId
                 this.clientRegistrationRepository
@@ -36,6 +41,9 @@ class OAuthLogoutSuccessHandler(
                         }
                         builder.encode(StandardCharsets.UTF_8).build().toUri()
                     }
+            }.switchIfEmpty {
+                this.serverLogoutSuccessHandler.onLogoutSuccess(exchange, authentication).then<URI>(Mono.empty<URI>())
             }.flatMap { redirectStrategy.sendRedirect(exchange.exchange, it) }
+
     }
 }
