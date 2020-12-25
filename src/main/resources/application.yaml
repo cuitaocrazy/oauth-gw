@@ -1,5 +1,6 @@
 server.port: 8090
-
+#logging.level:
+#  root: TRACE
 spring:
   security:
     oauth2:
@@ -10,15 +11,16 @@ spring:
             user-name-attribute: preferred_username
         registration:
           keycloak:
-            client-id: gw-test
-            client-secret: 39968d20-d0e5-42fb-99b0-f22d13461fe2
+            client-id: gw-test2
+            client-secret: c264f5c8-5fed-4da8-aa08-54ebcebe025e
+            scope: openid
   cloud:
     gateway:
       routes:
         - id: test-web
           uri: http://pm.lanxinpay.com
           predicates:
-            - Path=/
+            - Path=/app
           filters:
             - OAuth
         - id: test-api
