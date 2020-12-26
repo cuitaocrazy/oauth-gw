@@ -22,7 +22,9 @@ spring:
           predicates:
             - Path=/app,/app/**
           filters:
-            - OAuth=/app
+            - name: OAuth
+              args:
+                staticPaths: /app/static/**,/app/*.js,/app/*.css
         - id: test-api
           uri: http://pm.lanxinpay.com
           predicates:

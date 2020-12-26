@@ -18,28 +18,27 @@ class OAuthGatewayFilterFactory(
 ) : AbstractGatewayFilterFactory<OAuthGatewayFilterFactory.Config>(Config::class.java) {
 
     class Config {
-        var pathPrefix: String = ""
+        var staticPaths: Array<String> = arrayOf()
     }
 
-    override fun shortcutFieldOrder(): MutableList<String> = mutableListOf("pathPrefix")
-
-    private val staticResLocation = arrayOf("/css/**", "/js/**", "/images/**")
+    override fun shortcutFieldOrder(): MutableList<String> = mutableListOf("staticPaths")
 
     override fun apply(config: Config) = GatewayFilter { exchange, chain ->
-        ServerWebExchangeMatchers.pathMatchers(*staticResLocation.map { "${config.pathPrefix}$it" }.toTypedArray())
-                .matches(exchange)
-                .flatMap {
-                    if (it.isMatch) {
-                        chain.filter(exchange)
-                    } else {
-                        exchange.getPrincipal<OAuth2AuthenticationToken>()
-                                .flatMap { authentication -> authorizedClient(authentication) }
-                                .switchIfEmpty {
-                                    Mono.error(org.springframework.security.access.AccessDeniedException("Access Denied!"))
-                                }.flatMap {
-                                    chain.filter(exchange)
-                                }
-                    }
+        Mono.just(config.staticPaths)
+                .filter { it.isNotEmpty() }
+                .flatMap { ServerWebExchangeMatchers.pathMatchers(*it).matches(exchange) }
+                .filter { it.isMatch }
+                .switchIfEmpty {
+                    exchange.getPrincipal<OAuth2AuthenticationToken>()
+                            .flatMap { authentication -> authorizedClient(authentication) }
+                            .switchIfEmpty {
+                                Mono.error(org.springframework.security.access.AccessDeniedException("Access Denied!"))
+                            }.flatMap {
+                                chain.filter(exchange).then(Mono.empty())
+                            }
+                }
+                .flatMap{
+                    chain.filter(exchange).then(Mono.empty())
                 }
     }
 
