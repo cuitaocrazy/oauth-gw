@@ -33,13 +33,8 @@ class OAuthGatewayFilterFactory(
                             .flatMap { authentication -> authorizedClient(authentication) }
                             .switchIfEmpty {
                                 Mono.error(org.springframework.security.access.AccessDeniedException("Access Denied!"))
-                            }.flatMap {
-                                chain.filter(exchange).then(Mono.empty())
-                            }
-                }
-                .flatMap{
-                    chain.filter(exchange).then(Mono.empty())
-                }
+                            }.then(Mono.empty())
+                }.then(Mono.defer { chain.filter(exchange) })
     }
 
     private fun authorizedClient(oauth2Authentication: OAuth2AuthenticationToken): Mono<OAuth2AuthorizedClient> {
