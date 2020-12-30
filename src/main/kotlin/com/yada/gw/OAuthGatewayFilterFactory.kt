@@ -28,6 +28,9 @@ class OAuthGatewayFilterFactory(
             .map { exchange }
             .switchIfEmpty {
                 exchangeWithBearer(exchange, clientManagerProvider)
+                    .switchIfEmpty {
+                        Mono.error(org.springframework.security.access.AccessDeniedException("Access Denied!"))
+                    }
             }.flatMap(chain::filter)
     }
 }
